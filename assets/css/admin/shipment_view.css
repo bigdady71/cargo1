@@ -1,0 +1,108 @@
+/* assets/css/admin/shipment_view.css */
+/* ---- Page shell -------------------------------------------------------- */
+.shipment-view.container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+}
+
+/* If your navbar is fixed, add a little top padding so the title isn't hidden */
+.shipment-view.container{ padding-top: 2.5rem; }
+
+/* ---- Utilities --------------------------------------------------------- */
+.shipment-view .muted{ color:#6b7280; }
+.shipment-view .back{ display:inline-block; margin:.5rem 0 1rem; color:#0b6efb; text-decoration:none; }
+
+/* ---- Header ------------------------------------------------------------ */
+.shipment-view .head{
+  display:flex; gap:.75rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;
+}
+.shipment-view .head h1{
+  margin:0;
+  font-size: clamp(22px, 2.2vw, 28px);
+  line-height: 1.25;
+  letter-spacing: .2px;
+}
+.shipment-view .badge{
+  background:#e9f2ff; color:#0b6efb;
+  border-radius:999px; padding:.25rem .6rem; font-weight:600;
+}
+
+/* ---- Cards / key-values ----------------------------------------------- */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:1rem; margin-bottom:1rem;
+}
+.card{
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:1rem;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.01), 0 .5px 1px rgba(0,0,0,.04);
+}
+.kv{
+  display:grid; grid-template-columns:180px 1fr; gap:.4rem .8rem; margin-bottom:.75rem;
+}
+.kv > div:first-child{ color:#6b7280; }
+.desc,.raw{
+  white-space:pre-wrap; word-break:break-word; background:#f9fafb;
+  border:1px dashed #e5e7eb; border-radius:8px; padding:.5rem;
+}
+
+/* ---- Panels ------------------------------------------------------------ */
+.panel{
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:1rem; margin-bottom:1rem;
+}
+
+/* ---- Tables ------------------------------------------------------------ */
+.table-wrap{
+  max-height: 72vh;          /* keeps the page short; scroll inside table */
+  overflow:auto;
+  border:1px solid #e5e7eb; border-radius:12px;
+}
+.table{
+  width:100%; border-collapse:collapse; font-size:.95rem; background:#fff;
+}
+.table thead th{
+  position: sticky; top: 0; z-index: 1;
+  background:#fff; border-bottom:2px solid #e5e7eb; white-space:nowrap;
+}
+.table th,.table td{ padding:.55rem .6rem; text-align:left; vertical-align:top; border-bottom:1px solid #f1f5f9; }
+.table tbody tr:nth-child(even){ background:#fafafa; }
+
+/* Numeric columns right-aligned & non-wrapping.
+   Cols: 1(#) 2(ItemNo) 3(Desc) 4(Cartons) 5(Qty/Ctn) 6(TotalQty) 7(UnitPrice)
+         8(TotalAmount) 9(CBM) 10(TotalCBM) 11(GWkg) 12(TotalGW) 13(Created) */
+.table td:nth-child(4),
+.table td:nth-child(5),
+.table td:nth-child(6),
+.table td:nth-child(7),
+.table td:nth-child(8),
+.table td:nth-child(9),
+.table td:nth-child(10),
+.table td:nth-child(11),
+.table td:nth-child(12),
+.table th:nth-child(4),
+.table th:nth-child(5),
+.table th:nth-child(6),
+.table th:nth-child(7),
+.table th:nth-child(8),
+.table th:nth-child(9),
+.table th:nth-child(10),
+.table th:nth-child(11),
+.table th:nth-child(12){
+  text-align:right; white-space:nowrap;
+}
+.desc-col{ max-width: 560px; white-space: normal; }
+
+/* Totals footer pinned at bottom of scroll area for quick reference */
+.table tfoot th{
+  position: sticky; bottom: 0; z-index: 1; background:#f3f4f6; font-weight:700;
+  border-top:2px solid #e5e7eb;
+}
+.table tfoot th.right{ text-align:right; }
+
+/* ---- Print-friendly ---------------------------------------------------- */
+@media print{
+  .back, .navbar, header, footer { display:none !important; }
+  .shipment-view.container{ padding:0; max-width:none; }
+  .table-wrap{ max-height:none; overflow:visible; border:none; }
+}

@@ -1,0 +1,156 @@
+/* Admin – Dashboard (LIGHT) */
+/* Scoped to <main.container> only */
+
+main.container {
+  --bg: transparent;
+  --card: #ffffff;
+  --subtle: #f8fafc;          /* gray-50 */
+  --text: #0f172a;            /* slate-900 */
+  --muted: #475569;           /* slate-600 */
+  --line: #e5e7eb;            /* gray-200 */
+  --accent: #0ea5e9;          /* sky-500 */
+  --accent-600: #0284c7;      /* sky-600 */
+  --radius: 14px;
+  --shadow: 0 8px 20px rgba(2, 6, 23, 0.06);
+
+  color: var(--text);
+  max-width: 1040px;
+  margin: 24px auto 64px;
+  padding: 16px;
+}
+
+/* ---------- Title ---------- */
+main.container > h1 {
+  margin: 4px 0 18px;
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+main.container > h1::after {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin-top: 10px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* ---------- KPI Cards ---------- */
+main.container .kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+main.container .kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: grid;
+  gap: 6px;
+}
+main.container .kpi .kpi-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+main.container .kpi .kpi-value {
+  font-size: clamp(28px, 4.5vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* ---------- Status Breakdown ---------- */
+main.container .status-breakdown {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+main.container .status-breakdown h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+main.container .status-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+main.container .status-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--subtle);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+main.container .status-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--text);
+}
+main.container .status-name::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, #ffffff);
+}
+main.container .status-count {
+  font-weight: 800;
+  color: var(--accent-600);
+}
+
+/* ---------- Latest Shipments Table ---------- */
+main.container .latest {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+main.container .latest h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+main.container .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+main.container .table thead th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--subtle);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 700;
+}
+main.container .table tbody td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+main.container .table tbody tr:nth-child(even) { background: #fcfdff; }
+main.container .table tbody tr:hover { background: #f5fbff; }
+
+/* ---------- Small-screen polish ---------- */
+@media (min-width: 1120px) {
+  main.container { padding: 24px; }
+}

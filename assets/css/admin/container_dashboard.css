@@ -1,0 +1,223 @@
+/* container_dashboard.css */
+:root {
+  --border: #e5e7eb;
+  --muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, Arial, sans-serif;
+  background: #fafafa;
+  color: #111;
+  margin: 0;
+}
+
+.wrap {
+  max-width: 1300px;
+  margin: 24px auto;
+  padding: 0 12px;
+  margin-left: 30px; /* shift the entire wrap left a bit */
+}
+
+h1 {
+  font-size: 22px;
+  margin: 8px 0 16px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.input,
+.select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.btn {
+  padding: 8px 10px;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.btn-outline {
+  background: #fff;
+  color: #111;
+  border: 1px solid var(--border);
+}
+
+/* Table wrapper for responsiveness */
+.table-container {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+/* Table styling */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Header cells */
+.table thead th {
+  background: #f8fafc;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px 12px;
+}
+
+/* Data cells */
+.table td {
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Actions in rows */
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Pagination */
+.pager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.pager .btn {
+  border-color: var(--border);
+  background: #fff;
+  color: #111;
+}
+
+/* Modal styling */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal__panel {
+  width: 560px;
+  max-width: 95vw;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal__body {
+  padding: 12px;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+/* Customer modal rows */
+.cust {
+  padding: 8px 4px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Toast messages */
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  background: #111;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: none;
+}
+
+.toast.show {
+  display: block;
+}
+
+/* Small fix to make filters line up cleaner */
+select.select {
+  min-width: 160px;
+}
+
+/* Optional: hover effect */
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+/* Tag important statuses visually */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #f0fdfa;
+  color: #047857;
+}
+
+/* Enhance button spacing */
+.btn + .btn {
+  margin-left: 6px;
+}
+
+/* Refine input widths inside rows */
+.table td .input {
+  width: 100px;
+}
+
+.table td .select {
+  min-width: 140px;
+}

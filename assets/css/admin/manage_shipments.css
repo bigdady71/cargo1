@@ -1,0 +1,219 @@
+/* Admin – Manage Shipments (PRO POLISH) */
+/* Scoped to <main class="container"> only */
+
+main.container {
+  /* Theme tokens */
+  --bg: #f7f8fb;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --muted: #5b677a;
+  --line: #e6e9ef;
+  --accent: #2563eb;      /* primary */
+  --accent-600: #1d4ed8;
+  --accent-soft: #eef2ff;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 14px;
+  --shadow: 0 10px 25px rgba(2, 6, 23, .07);
+
+  color: var(--ink);
+  background: var(--bg);
+  max-width: 1180px;
+  margin: 28px auto 64px;
+  padding: 0 18px 18px;
+}
+
+/* ---------- Title ---------- */
+main.container > h1 {
+  margin: 6px 0 18px;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  position: relative;
+  display: inline-block;
+}
+main.container > h1::after {
+  content: "";
+  position: absolute;
+  left: 2px; bottom: -8px;
+  width: 76px; height: 4px;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+
+/* ---------- Cards & alerts ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.alert {
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: 14px;
+}
+.alert.success { border-color: color-mix(in srgb, var(--success) 40%, var(--line)); background: color-mix(in srgb, var(--success) 8%, #fff); }
+.alert.error   { border-color: color-mix(in srgb, var(--danger)  40%, var(--line)); background: color-mix(in srgb, var(--danger)  8%, #fff); }
+
+/* ---------- Filter bar ---------- */
+.filter-form {
+  display: grid;
+  grid-template-columns: 1fr 220px 110px;
+  gap: 10px;
+  padding: 12px;
+  margin: 10px 0 16px;
+}
+.filter-form,
+.table-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+.input,
+select,
+.filter-form input[type="text"],
+.filter-form select {
+  width: 70%;
+  height: 42px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border .15s ease, box-shadow .15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.filter-form input[type="text"]:focus,
+.filter-form select:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* Custom select arrow */
+.filter-form select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+    linear-gradient(to right, transparent, transparent);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 13px) calc(50% - 3px),
+    calc(100% - 2.2rem) 50%;
+  background-size: 6px 6px, 6px 6px, 1px 42px;
+  background-repeat: no-repeat;
+  padding-right: 2.6rem;
+}
+
+.btn,
+button,
+.filter-form button {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .02s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn-primary,
+.filter-form button {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover,
+.filter-form button:hover { background: var(--accent-600); box-shadow: 0 6px 14px rgba(37,99,235,.25); }
+.btn-light { background:#f9fafb; border-color: var(--line); color: var(--ink); }
+.btn-light:hover { background: var(--accent-soft); border-color:#c7d2fe; }
+
+.btn-xs { height: 26px; padding: 0 8px; border-radius: 8px; font-size: 12px; line-height: 26px; }
+
+/* ---------- Results meta ---------- */
+.results-meta { font-size: 13px; color: var(--muted); margin: 6px 2px 10px; }
+
+/* ---------- Table ---------- */
+.table-wrap { overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table thead th {
+  text-align: left;
+  padding: 12px 14px;
+  background: #fbfcff;
+  border-bottom: 1px solid var(--line);
+  color: #6b7280;
+  font-weight: 700;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  vertical-align: middle;
+  background: #fff;
+}
+.table tbody tr:nth-child(even) td { background: #fcfdff; }
+.table tbody tr:hover td { background: #f5fbff; }
+
+/* Tracking column */
+.trk { font-weight: 700; letter-spacing: .02em; }
+.sub-code { margin-top: 4px; font-size: 12px; color: var(--muted); }
+.sub-code code { background: #f4f6fb; border: 1px solid var(--line); padding: 2px 6px; border-radius: 8px; }
+
+/* Inline status form */
+.inline-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.inline-form select {
+  height: 36px; font-size: 13px; border-radius: 10px; padding: 6px 10px;
+  border: 1px solid var(--line); background:#fff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+    linear-gradient(to right, transparent, transparent);
+  background-position:
+    calc(100% - 16px) calc(50% - 3px),
+    calc(100% - 11px) calc(50% - 3px),
+    calc(100% - 2.1rem) 50%;
+  background-size: 6px 6px, 6px 6px, 1px 36px;
+  background-repeat: no-repeat;
+  padding-right: 2.4rem;
+}
+.inline-form select:focus { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.inline-form button { height: 36px; padding: 0 12px; }
+
+/* Action link */
+.btn-link { color: var(--accent-600); text-decoration: none; font-weight: 700; font-size: 13px; }
+.btn-link:hover { text-decoration: underline; }
+
+/* ---------- Pagination ---------- */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 16px 0 0;
+}
+.pagination a, .pagination span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+}
+.pagination a:hover { background: var(--accent-soft); border-color:#c7d2fe; }
+.pagination .active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pagination .disabled { color: var(--muted); background: #f3f5f9; }
+
+/* ---------- Small-screen polish ---------- */
+@media (max-width: 860px) {
+  .filter-form { grid-template-columns: 1fr; }
+  .inline-form { grid-template-columns: 1fr; }
+  .table thead { display: none; }
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table tbody tr { margin: 8px 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+  .table tbody td { border: 0; padding: 10px 12px; }
+  .table tbody td + td { border-top: 1px solid var(--line); }
+}

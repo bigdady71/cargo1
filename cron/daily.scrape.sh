@@ -1,0 +1,1 @@
+// calls python site bots then php/jobs/update_shipments.php

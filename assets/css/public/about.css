@@ -1,0 +1,615 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* ===== NAVBAR (header + mobile menu) ===== */
+
+/* Header bar */
+#header {
+    transition: background-color 0.2s ease-in-out;
+    background-color: #3f4e85;
+    height: 3.5em;
+    left: 0;
+    line-height: 3.5em;
+    padding: 0 1.25em;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10000;
+}
+
+#header h1 {
+    transition: opacity 0.2s ease-in-out, visibility 0.2s;
+    font-size: 0.8em;
+    margin-bottom: 0;
+    opacity: 1;
+    visibility: visible;
+}
+
+#header h1 a {
+    border: 0;
+}
+
+/* Right-aligned "MENU" trigger */
+#header nav {
+    font-family: Raleway, Helvetica, sans-serif;
+    font-size: 0.8em;
+    font-weight: 700;
+    height: 3em;
+    letter-spacing: 0.1em;
+    line-height: 3em;
+    position: absolute;
+    right: 0.7em;
+    text-transform: uppercase;
+    top: 0.7em;
+}
+
+#header nav a {
+    border: 0;
+    display: inline-block;
+    padding: 0 1em;
+}
+
+#header nav a:before {
+    float: right;
+    margin-left: 0.75em;
+}
+
+/* Hamburger look for the trigger */
+#header nav a[href="#menu"] {
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.125);
+    padding: 0 1.35em;
+}
+
+#header nav a[href="#menu"]:before {
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+    text-transform: none !important;
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    content: '\f0c9';
+    /* bars icon */
+}
+
+#header nav a[href="#menu"]:hover {
+    background-color: rgba(255, 255, 255, 0.025);
+}
+
+#header nav a[href="#menu"]:active {
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+/* Transparent header on hero pages */
+#header.alt {
+    background-color: transparent;
+}
+
+#header.alt h1 {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* ===== Off-canvas Menu Overlay ===== */
+
+#page-wrapper {
+    transition: filter 0.25s ease;
+}
+
+#menu {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0.35s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    background: rgba(46, 49, 65, 0.8);
+    cursor: default;
+    height: 100%;
+    left: 0;
+    opacity: 0;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    visibility: hidden;
+    width: 100%;
+    z-index: 10001;
+}
+
+#menu .inner {
+    padding: 2.5em 1.5em 0.5em 1.5em;
+    transform: translateY(0.5em);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    -webkit-overflow-scrolling: touch;
+    background: #4c5c96;
+    border-radius: 5px;
+    display: block;
+    max-width: 100%;
+    opacity: 0;
+    position: relative;
+    width: 18em;
+    color: #fff;
+}
+
+#menu h2 {
+    border-bottom: solid 2px rgba(255, 255, 255, 0.125);
+    padding-bottom: 1em;
+}
+
+#menu .links {
+    list-style: none;
+    margin: 0 0 1.5em 0;
+    padding: 0;
+}
+
+#menu .links li {
+    padding: 0;
+}
+
+#menu .links li a {
+    border-radius: 5px;
+    border: 0;
+    display: block;
+    font-family: Raleway, Helvetica, sans-serif;
+    font-size: 0.8em;
+    font-weight: 200;
+    letter-spacing: 0.1em;
+    line-height: 1.85em;
+    padding: 0.75em 0;
+    text-transform: uppercase;
+    color: #fff;
+    text-decoration: none;
+}
+
+#menu .links li a:hover {
+    background: #45558d;
+}
+
+/* Close button (X) area in the top-right of the card */
+#menu .close {
+    background-image: url("../../images/close.svg");
+    background-position: 75% 25%;
+    background-repeat: no-repeat;
+    background-size: 2em 2em;
+    border: 0;
+    display: block;
+    height: 4em;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    text-indent: 4em;
+    top: 0;
+    width: 4em;
+}
+
+/* When menu is open */
+body.is-menu-visible #page-wrapper {
+    filter: blur(0.25em);
+}
+
+body.is-menu-visible #menu {
+    pointer-events: auto;
+    opacity: 1;
+    visibility: visible;
+}
+
+body.is-menu-visible #menu .inner {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* ===== Responsive tweaks ===== */
+
+@media screen and (max-width: 736px) {
+    #header {
+        height: 2.75em;
+        line-height: 2.75em;
+    }
+
+    #header nav {
+        top: 0;
+        right: 0;
+        height: inherit;
+        line-height: inherit;
+    }
+
+    #header nav a {
+        height: inherit;
+        line-height: inherit;
+    }
+
+    #header nav a[href="#menu"] {
+        box-shadow: none;
+        padding: 0 1em;
+        border-radius: 0;
+    }
+
+    #header nav a[href="#menu"]:hover,
+    #header nav a[href="#menu"]:active {
+        background-color: inherit;
+    }
+
+    #menu .inner {
+        max-height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    #menu .inner .close {
+        background-size: 1.5em 1.5em;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #header nav a[href="#menu"] {
+        width: 4em;
+        white-space: nowrap;
+        text-indent: 4em;
+        position: relative;
+    }
+
+    #header nav a[href="#menu"]:before {
+        width: inherit;
+        position: absolute;
+        top: 0;
+        left: 0;
+        text-indent: 0;
+        text-align: right;
+        margin-left: 0;
+        padding-right: 1.25em;
+    }
+}
+
+
+
+/* Full-screen waves background under your UI */
+canvas#sea-waves {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    /* keep header/menu above */
+    display: block;
+}
+
+/* Allow scrolling + normal menu behaviour */
+html, body {
+    width: 99%;
+    height: 100%;
+    overflow: auto;
+}
+
+/* Header/menu should sit above the waves */
+#header, #menu {
+    position: relative;
+    z-index: 10;
+}
+
+/* Optional: subtle fog/gradient at top for readability */
+.waves-overlay {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 30vh;
+    z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0));
+}
+
+/* Respect reduced motion users */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* ===== Critical global fix (your file had width:99%) ===== */
+html, body {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+}
+
+/* Keep navbar above page content */
+#header, #menu {
+    position: relative;
+    z-index: 10;
+}
+
+/* ===== Scope everything to avoid theme collisions ===== */
+.about-page .wrapper {
+    padding: 4.5em 0;
+}
+
+.about-page .section-gap {
+    margin-top: .5rem;
+}
+
+/* Hero */
+.about-page .hero .inner {
+    text-align: center;
+    padding-top: 6.25em;
+}
+
+.about-page .hero__title {
+    font-size: 2.6rem;
+    margin: 0 0 .4rem;
+}
+
+.about-page .hero__sub {
+    color: #2d3e50 !important;
+    font-weight: 600;
+}
+
+/* 60/40 split */
+.about-page .split-60__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    /* ~60/40, safe minmax */
+    gap: 2rem;
+    align-items: center;
+}
+
+.about-page .split-60__text p {
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+.about-page .bullets {
+    margin: 1rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.about-page .bullets li {
+    margin: .25rem 0;
+}
+
+/* Staggered 40/60 */
+.about-page .stagger-40__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 2rem;
+    align-items: center;
+}
+
+/* Carded images */
+.about-page .card-img {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .08);
+}
+
+.about-page .card-img img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Pills */
+.about-page .pill-caps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 1rem;
+}
+
+.about-page .pill {
+    background: #f0f6ff;
+    color: #0b3b73;
+    border-radius: 999px;
+    padding: .5rem .8rem;
+    font-weight: 700;
+}
+
+.about-page .pill i {
+    margin-right: .4rem;
+}
+
+/* ===== Services cards (renamed from features/feature) ===== */
+.about-page .services__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.about-page .svc-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .06);
+    transition: transform .12s ease, box-shadow .15s ease;
+}
+
+.about-page .svc-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .08);
+}
+
+.about-page .svc-card__icon {
+    font-size: 1.5rem;
+    color: #0b5db3;
+    margin-bottom: .35rem;
+}
+
+.about-page .svc-card h3 {
+    margin: 0 0 .25rem;
+    font-weight: 800;
+    letter-spacing: .2px;
+    text-transform: none;
+}
+
+/* CTA */
+.about-page .cta__grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    background: #0b5db3;
+    color: #fff;
+    padding: 1.2rem 1.4rem;
+    border-radius: 14px;
+    box-shadow: 0 14px 28px rgba(11, 93, 179, .22);
+}
+
+.about-page .btn {
+    display: inline-block;
+    border: 0;
+    padding: .8rem 1.1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.about-page .btn--primary {
+    background: #092a4a;
+    color: #fff;
+}
+
+.about-page .btn--primary:hover {
+    background: #0f3d6b;
+}
+
+/* Breakpoints */
+@media (max-width: 1024px) {
+    .about-page .services__grid {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+
+    .about-page .split-60__grid,
+    .about-page .stagger-40__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .about-page .services__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .about-page .hero__title {
+        font-size: 2.1rem;
+    }
+}
+
+/* If the dark angled separators from the theme bother you on this page, neutralize them: */
+.about-page .wrapper.alt:before,
+.about-page .wrapper.alt:after {
+    display: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}
+
+h1 , h2 , h3 , h4 , h5 , h6 , p , a , li , span , div , strong {
+    color: #2d3e50 !important;
+}
+#menuh2 , a {
+    color: #fff !important;
+}
+/* --- About page: remove the theme's angled wedges and tighten footer --- */
+
+/* Remove the diagonal :before/:after panels on all sections of this page */
+.about-page .wrapper::before,
+.about-page .wrapper::after {
+  display: none !important;
+}
+
+/* Tighten spacing on the final section */
+.about-page .wrapper:last-of-type { padding-bottom: 1.5rem; }
+.about-page .section-gap:last-of-type { margin-bottom: 0; }
+
+/* Shrink the footer and remove its own wedge, only on the About page */
+main.about-page + #footer {
+  margin-top: 0 !important;
+  padding: 1.25rem 0 !important; /* was ~4–6rem in the theme */
+}
+
+main.about-page + #footer .inner {
+  padding: 0 !important;
+}
+
+main.about-page + #footer::before,
+main.about-page + #footer::after {
+  display: none !important; /* hide the large diagonal strip above footer */
+}
+/* Ensure the menu overlay always sits above and becomes visible on toggle */
+#menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(46,49,65,0.8);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 10001;
+  transition: opacity .35s ease, visibility .35s ease;
+}
+
+#menu .inner {
+  background: #4c5c96;
+  color: #fff;
+  width: 18em;
+  max-width: calc(100vw - 2rem);
+  border-radius: 6px;
+  padding: 2.25em 1.5em .75em;
+  transform: translateY(.5em);
+  opacity: 0;
+  -webkit-overflow-scrolling: touch;
+  transition: transform .35s ease, opacity .35s ease;
+}
+
+body.is-menu-visible #menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body.is-menu-visible #menu .inner {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Keep the blur on the main content only */
+body.is-menu-visible #page-wrapper { filter: blur(.25em); }
+
+/* Make sure no page-specific z-index beats the menu */
+.about-page .wrapper,
+.about-page .hero,
+.about-page .services__grid { z-index: 0; position: relative; }
+/* Align MENU label and hamburger icon perfectly (desktop/tablet) */
+@media (min-width: 481px) {
+  #header nav a[href="#menu"] {
+    display: inline-flex;           /* replace float hack with flex */
+    align-items: center;            /* vertical centering */
+    gap: .55em;                     /* space between label and icon */
+    height: 3em;                    /* match theme nav height */
+    line-height: 1;                 /* prevent baseline drift */
+    padding: 0 1.2em;
+  }
+
+  #header nav a[href="#menu"]:before {
+    float: none !important;         /* kill original float */
+    position: static;               /* no absolute/relative offset */
+    order: 2;                       /* icon after the text */
+    margin: 0;                      /* spacing handled by gap */
+    line-height: 1;
+    font-size: .95em;               /* tweak if icon feels tall */
+    transform: translateY(1px);     /* tiny optical nudge */
+  }
+
+}
+
+/* Keep the original compact “icon-only” treatment on very small screens */

@@ -1,0 +1,100 @@
+/* Admin Login – page-specific styles */
+
+:root {
+  --bg: #1c3e6a;
+  --card: #192a41;
+  --text: #e7ecf3;
+  --muted: #98a2b3;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --danger: #ef4444;
+  --border: #232a34;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(180deg, #b2d3ff, #e5e5e5);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.login-wrapper {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+.login-card h1 {
+  margin: 0 0 18px 0;
+  font-size: 22px;
+  letter-spacing: .3px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.field label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.field input {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #1b2839;
+  color: var(--text);
+  outline: none;
+}
+
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25);
+}
+
+.btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.btn:hover { background: var(--accent-hover); }
+
+.alert {
+  background: rgba(239, 68, 68, .15);
+  border: 1px solid rgba(239, 68, 68, .35);
+  color: #fecaca;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+p{
+  color: #e5e5e5;
+  font-size: 14px;
+}

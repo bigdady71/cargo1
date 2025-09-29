@@ -1,0 +1,135 @@
+/* assets/css/shipping_calculator.css */
+:root{
+  --bg:#f6f8fb;
+  --card:#fff;
+  --text:#0f172a;
+  --muted:#6b7280;
+  --primary:#0b63ff;
+  --primary-ghost:#e6efff;
+  --ring:#cbd5e1;
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --radius:14px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.sc-container{max-width:960px;margin:40px auto;padding:0 16px}
+.sc-hero{text-align:center;margin-bottom:18px}
+.sc-hero h1{font-size:32px;margin:0 0 10px}
+.sc-pills{display:flex;gap:8px;justify-content:center}
+.pill{
+  background:var(--primary-ghost);
+  color:var(--primary);
+  padding:6px 12px;border-radius:999px;font-weight:600;font-size:14px
+}
+
+.sc-card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:18px 16px;margin:12px 0
+}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:720px){.grid-2{grid-template-columns:1fr}}
+
+.field label{display:block;font-weight:600;margin:6px 0}
+.field .hint{font-size:12px;color:var(--muted);margin-top:6px}
+.field .error{font-size:12px;color:#b91c1c;margin-top:6px}
+
+.radios{display:flex;gap:18px;align-items:center}
+.radios label{display:flex;gap:8px;align-items:center}
+.radios .disabled{opacity:.45}
+.route-hint{margin-top:34px;color:var(--muted);text-align:right}
+
+select,input[type="number"]{
+  width:100%;padding:12px;border:1px solid var(--ring);border-radius:10px;background:#fff;
+  font-size:16px;outline:none
+}
+select:focus,input[type="number"]:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(11,99,255,.15)}
+
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+button{
+  padding:12px 18px;border-radius:10px;border:0;font-weight:700;cursor:pointer
+}
+#btn-calc{background:var(--primary);color:#fff;opacity:.85}
+#btn-calc:hover{opacity:1}
+#btn-calc:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:#fff;border:1px solid var(--ring);color:var(--text)}
+button.ghost:hover{background:#f9fafb}
+
+#result .result-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#result .chip{background:#eef2ff;color:#4338ca;font-weight:700;border-radius:999px;padding:4px 10px;font-size:12px}
+#result .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0}
+#result .row em{display:block;font-style:normal;color:var(--muted);font-size:12px}
+#result .row b{font-size:16px}
+#result .total-line{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--ring)}
+#result .total-line span{font-weight:700}
+#result .total-line strong{font-size:22px}
+
+.toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);
+  background:#111827;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.align-right{text-align:right}
+/* core styles for menu toggle */
+body.is-menu-visible #menu {
+  display: block;
+}
+#menu {
+
+  width: 100%;
+  max-width: 320px;
+  height: 100%;
+  background-color: #2c3e50;
+  color: #fff;
+  z-index: 10001;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  padding: 2em 1.5em;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+}
+
+/* Show when body has is-menu-visible */
+body.is-menu-visible #menu {
+  transform: translateX(0);
+}
+
+body.is-menu-visible {
+  overflow: hidden;
+}
+
+/* Background overlay */
+body.is-menu-visible::before {
+  content: '';
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  z-index: 10000;
+}
+/* CSS for the centered modal menu */
+#menu {
+  display: none;
+
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 30, 48, 0.85); /* dark overlay */
+  z-index: 10000;
+}
+
+#menu .inner {
+  width: 90%;
+  max-width: 340px;
+  background: #3c4a87;
+  color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  position: relative;
+}
