@@ -3,9 +3,9 @@
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['upload']) && $_GET['upload'] === '1') {
   // Minimal, self-contained DB connect here to keep the standalone-page pattern
   $dbHost = 'localhost';
-  $dbName = 'u864467961_salameh_cargo';
-  $dbUser = 'u864467961_cargo_user';
-  $dbPass = 'Tryu@123!';
+  $dbName = 'salameh_cargo';
+  $dbUser = 'root';
+  $dbPass = '';
   header('Content-Type: application/json; charset=utf-8');
 
   try {

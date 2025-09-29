@@ -4,9 +4,9 @@ session_start();
 
 /* DB connection (duplicate on every page by design) */
 $dbHost = 'localhost';
-$dbName = 'u864467961_salameh_cargo';
-$dbUser = 'u864467961_cargo_user';
-$dbPass = 'Tryu@123!';
+$dbName = 'salameh_cargo';
+$dbUser = 'root';
+$dbPass = '';
 
 
 try {

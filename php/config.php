@@ -9,9 +9,9 @@ const OTP_MIN_RESEND_SEC = 45; // cooldown to prevent spam
 const OTP_MAX_PER_HOUR   = 6;  // throttle per phone
 
 // DB
-const DB_DSN  = 'mysql:host=localhost;dbname=u864467961_salameh_cargo;charset=utf8mb4';
-const DB_USER = 'u864467961_cargo_user';
-const DB_PASS = 'Tryu@123!';
+const DB_DSN  = 'mysql:host=localhost;dbname=salameh_cargo;charset=utf8mb4';
+const DB_USER = 'root';
+const DB_PASS = '';
 
 
 // n8n webhook URL (create this in step 4)

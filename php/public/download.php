@@ -4,9 +4,9 @@ session_start();
 
 // Minimal DB bootstrap
 $dbHost = 'localhost';
-$dbName = 'u864467961_salameh_cargo';
-$dbUser = 'u864467961_cargo_user';
-$dbPass = 'Tryu@123!';
+$dbName = 'salameh_cargo';
+$dbUser = 'root';
+$dbPass = '';
 try {
   $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4", $dbUser, $dbPass, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

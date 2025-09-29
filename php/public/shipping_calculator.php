@@ -4,9 +4,9 @@ session_start();
 
 /* ---------- DB connection (adjust if needed) ---------- */
 $dbHost = 'localhost';
-$dbName = 'u864467961_salameh_cargo';
-$dbUser = 'u864467961_cargo_user';
-$dbPass = 'Tryu@123!';
+$dbName = 'salameh_cargo';
+$dbUser = 'root';
+$dbPass = '';
 
 try {
   $pdo = new PDO(
