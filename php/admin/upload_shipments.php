@@ -141,35 +141,51 @@ function generateCustomerTrackingCode(PDO $pdo, ?int $userId): string {
 
 /** parse an uploaded spreadsheet (XLSX/CSV) into normalized rows */
 function parseSpreadsheetToRows(array $file, bool $hasHeader, int $headerRow = 1): array {
+  /**
+   * Parse a CSV or XLSX file into a list of associative row arrays. When reading
+   * from Excel, this function also normalizes vertically merged cells for
+   * certain numeric columns. Specifically, for the headers:
+   *   TOTAL CTNS, QTY/CTN, TOTALQTY, UNIT PRICE, TOTAL AMOUNT, CBM,
+   *   TOTAL CBM, GWKG, TOTAL GW
+   * if a cell is part of a vertical merge, the value from the top row of
+   * the merged block is retained only on that row, and subsequent rows
+   * covered by the merge will contain a literal underscore "_" as a
+   * placeholder. This makes the handling of merged ranges deterministic
+   * instead of duplicating values downward.
+   */
   $rows = [];
-  $map = header_map();
+  $map  = header_map();
 
   $tmp  = $file['tmp_name'];
   $name = $file['name'];
   $ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 
-  if (!is_file($tmp)) throw new RuntimeException('Excel file missing.');
+  if (!is_file($tmp)) {
+    throw new RuntimeException('Excel file missing.');
+  }
 
-  // CSV
+  // CSV processing – unchanged from original. No merged cells to handle.
   if (in_array($ext, ['csv','txt'])) {
     $fh = fopen($tmp, 'rb');
     if (!$fh) throw new RuntimeException('Cannot open CSV.');
     $header = null;
-    while(($cols = fgetcsv($fh, 0, ',', '"', '\\')) !== false){
-      $cols = array_map(fn($v)=>trim((string)$v), $cols);
-      if ($header === null){
-        if ($hasHeader){
+    while (($cols = fgetcsv($fh, 0, ',', '"', '\\')) !== false) {
+      // trim all columns
+      $cols = array_map(fn($v) => trim((string)$v), $cols);
+      if ($header === null) {
+        if ($hasHeader) {
           $header = array_map('norm_key', $cols);
           continue;
         } else {
-          $header = range(0, count($cols)-1);
+          $header = range(0, count($cols) - 1);
         }
       }
-      if (!array_filter($cols, fn($v)=>$v!=='')) continue;
+      // skip rows that are completely empty
+      if (!array_filter($cols, fn($v) => $v !== '')) continue;
       if (count($cols) < count($header)) $cols = array_pad($cols, count($header), '');
       $assoc = [];
-      foreach ($header as $i=>$h){
-        if ($h==='') continue;
+      foreach ($header as $i => $h) {
+        if ($h === '') continue;
         $key = $map[$h] ?? $h;
         $assoc[$key] = $cols[$i] ?? '';
       }
@@ -185,34 +201,132 @@ function parseSpreadsheetToRows(array $file, bool $hasHeader, int $headerRow = 1
   $highestRow  = $sheet->getHighestRow();
   $highestCol  = $sheet->getHighestColumn();
 
+  // Prepare header mapping
   $header = [];
+  $headerIndices = [];
   if ($hasHeader) {
-    $hdrRange  = 'A'.$headerRow.':'.$highestCol.$headerRow;
-    $hdrVals   = $sheet->rangeToArray($hdrRange, null, true, true, false)[0] ?? [];
-    $header    = array_map(fn($h)=>norm_key((string)$h), $hdrVals);
-  }
-
-  $start = $hasHeader ? ($headerRow + 1) : 1;
-  if ($start <= $highestRow){
-    $dataRange = 'A'.$start.':'.$highestCol.$highestRow;
-    $dataRows  = $sheet->rangeToArray($dataRange, null, true, true, false);
-    foreach($dataRows as $cols){
-      if (!array_filter($cols, fn($v)=>trim((string)$v) !== '')) continue;
-      if ($header){
-        if (count($cols) < count($header)) $cols = array_pad($cols, count($header), '');
-        $assoc=[];
-        foreach($header as $i=>$h){
-          if ($h==='') continue;
-          $key = header_map()[$h] ?? $h;
-          $assoc[$key] = isset($cols[$i]) ? trim((string)$cols[$i]) : '';
-        }
-      } else {
-        $assoc = $cols; // no header case
-      }
-      if (implode('', $assoc) !== '') $rows[] = $assoc;
+    $hdrRange = 'A' . $headerRow . ':' . $highestCol . $headerRow;
+    $hdrVals  = $sheet->rangeToArray($hdrRange, null, true, true, false)[0] ?? [];
+    $header   = array_map(fn($h) => norm_key((string)$h), $hdrVals);
+    // Build headerIndices: canonical key => column index (0‑based)
+    foreach ($header as $i => $h) {
+      if ($h === '') continue;
+      $canon = $map[$h] ?? $h;
+      $headerIndices[$canon] = $i;
     }
   }
-  return $rows;
+
+  // Determine start row for data (1-indexed in sheet coordinates)
+  $startRow = $hasHeader ? ($headerRow + 1) : 1;
+
+  // Read all data rows from the sheet (including blanks). We avoid skipping
+  // blank rows here because merged ranges may occupy blank-looking rows.
+  $dataRows = [];
+  if ($startRow <= $highestRow) {
+    $dataRange = 'A' . $startRow . ':' . $highestCol . $highestRow;
+    $dataRows  = $sheet->rangeToArray($dataRange, null, true, true, false);
+    // At this point $dataRows is an array indexed from 0..($highestRow-$startRow).
+  }
+
+  // If there is no data, return empty.
+  if (!$dataRows) {
+    return [];
+  }
+
+  // Identify which canonical fields require merged-cell normalization
+  $normalizedFields = [
+    'total_ctns', 'qty_per_ctn', 'total_qty', 'unit_price',
+    'total_amount', 'cbm', 'total_cbm', 'gwkg', 'total_gw'
+  ];
+
+  // Build a map of column index (0-based) => true for fields we care about
+  $targetCols = [];
+  foreach ($normalizedFields as $field) {
+    if (isset($headerIndices[$field])) {
+      $targetCols[$headerIndices[$field]] = true;
+    }
+  }
+
+  // Compute which rows/columns in dataRows belong to a vertical merge. We use
+  // PhpSpreadsheet's getMergeCells() to find merged ranges. Each merged range
+  // is keyed by its top-left cell coordinate with the range as the value.
+  // We'll mark all rows beneath the first row of a merge for targeted columns
+  // to be replaced with underscore.
+  $mergeCells = $sheet->getMergeCells();
+  $underscoreMap = []; // [rowIndex][colIndex] => true indicates underscore
+
+  if ($mergeCells && $targetCols) {
+    // We need the Coordinate class to convert between coordinate strings and
+    // numeric row/column indices.
+    foreach ($mergeCells as $mergeRange) {
+      // mergeRange is like "C7:C9" or "B3:D3". We only care about vertical merges
+      // where the start and end column letters are the same.
+      if (strpos($mergeRange, ':') === false) continue;
+      [$startCoord, $endCoord] = explode(':', $mergeRange);
+      [$startCol, $startRowNum] = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::coordinateFromString($startCoord);
+      [$endCol, $endRowNum]     = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::coordinateFromString($endCoord);
+      // Only consider vertical merges within the data region
+      if ($startCol !== $endCol) continue; // skip horizontal merges
+      if ($startRowNum < $startRow) continue; // skip merges above data start
+      // Convert column letter to 0-based index
+      $colIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($startCol) - 1;
+      // Only process if this column maps to a targeted field
+      if (!isset($targetCols[$colIndex])) continue;
+      // Determine relative row indices inside dataRows for this merge
+      $relativeStart = $startRowNum - $startRow; // 0‑based index into $dataRows
+      $relativeEnd   = $endRowNum   - $startRow;
+      if ($relativeEnd <= $relativeStart) continue;
+      // Mark all rows after the first one in the merge to be underscore
+      for ($r = $relativeStart + 1; $r <= $relativeEnd; $r++) {
+        $underscoreMap[$r][$colIndex] = true;
+      }
+    }
+  }
+
+  // Now build the list of associative rows. We'll iterate over $dataRows
+  // preserving underscores for targeted merged ranges. Rows that are entirely
+  // blank (after applying underscores) will be skipped.
+  $rowsOut = [];
+  foreach ($dataRows as $rowIndex => $cols) {
+    // Ensure row length matches header length
+    if ($header) {
+      if (count($cols) < count($header)) {
+        $cols = array_pad($cols, count($header), '');
+      }
+    }
+    // Apply underscore replacements for merged cells
+    if (isset($underscoreMap[$rowIndex])) {
+      foreach ($underscoreMap[$rowIndex] as $colIndex => $_flag) {
+        // Only override if the original cell is empty or equal to the merged value
+        $cols[$colIndex] = '_';
+      }
+    }
+    // Build associative array keyed by canonical names
+    $assoc = [];
+    if ($header) {
+      foreach ($header as $i => $h) {
+        if ($h === '') continue;
+        $key = $map[$h] ?? $h;
+        $value = isset($cols[$i]) ? trim((string)$cols[$i]) : '';
+        $assoc[$key] = $value;
+      }
+    } else {
+      // No header: use numeric indices as keys
+      foreach ($cols as $i => $value) {
+        $assoc[$i] = trim((string)$value);
+      }
+    }
+    // Determine if row is empty after normalization. We keep rows that have
+    // at least one non-empty value or an underscore for targeted fields.
+    $keep = false;
+    foreach ($assoc as $v) {
+      if ($v !== '') { $keep = true; break; }
+    }
+    if ($keep) {
+      $rowsOut[] = $assoc;
+    }
+  }
+  return $rowsOut;
 }
 
 /** main: process one shipment (one excel + optional pdf + optional assignee) */
@@ -224,33 +338,60 @@ function process_single_shipment(
   string $containerNum,
   bool $hasHeader
 ): array {
+  /**
+   * This function processes a single shipment import. It implements two major
+   * behavioural changes:
+   *
+   * 1. Merged numeric columns are normalized in parseSpreadsheetToRows(),
+   *    producing literal underscores in place of duplicated values for
+   *    vertically merged ranges. Only text fields (item_no, description) are
+   *    carried downward.
+   *
+   * 2. Imports keyed by tracking_number overwrite existing shipments rather
+   *    than always inserting a new one. The tracking number is derived from
+   *    the filename (same logic as generateUniqueTracking() but without
+   *    auto‑suffixed uniqueness), and if a shipment already exists with that
+   *    tracking_number then its non‑preserved fields are updated while
+   *    shipment_id, customer_tracking_code, shipping_code, container_number
+   *    and user_id remain unchanged. If no such shipment exists, a new
+   *    shipment row is created with no customer assignment.
+   */
 
+  // Extract a base tracking number from the file name. We mirror the
+  // sanitisation in generateUniqueTracking() but do not append a numeric
+  // suffix here. If this base already exists in the database then we
+  // overwrite that shipment; otherwise we may generate a unique suffix
+  // later when inserting a new shipment.
   $originalName = $excelFile['name'] ?? 'upload.xlsx';
-  $tracking     = generateUniqueTracking($pdo, $originalName);
+  $baseName     = pathinfo($originalName, PATHINFO_FILENAME);
+  // Normalise: replace non word/hyphen chars with '-', trim and limit length
+  $sanitizedBase = preg_replace('/[^\w\-]+/u', '-', $baseName);
+  $sanitizedBase = trim($sanitizedBase, "-_ ");
+  $sanitizedBase = substr($sanitizedBase ?: ('UPLOAD-' . date('Ymd-His')), 0, 100);
 
-  // Parse sheet → rows
+  // Parse sheet into rows, applying merged‑cell normalization. If there are
+  // no rows detected this will throw.
   $rows = parseSpreadsheetToRows($excelFile, $hasHeader);
   if (!$rows) throw new RuntimeException('No rows detected in sheet.');
 
-  // carry merged text + totals downward
+  // Carry item_no and description downward for merged text fields only. Do
+  // not distribute numeric totals – these are handled inside
+  // parseSpreadsheetToRows() now.
   $rows = duplicateMergedTextField($rows, 'item_no');
   $rows = duplicateMergedTextField($rows, 'description');
-  $rows = distributeMergedTotalPerRow($rows, 'total_cbm');
-  $rows = distributeMergedTotalPerRow($rows, 'total_gw');
-  $rows = distributeMergedTotalPerRow($rows, 'gwkg');
 
-  // try to find assignee via shipping_code in sheet if not provided
-  if (!$userId) {
-    foreach ($rows as $r){
-      if (!empty($r['shipping_code'])) { $userId = userIdFromShippingCode($pdo, $r['shipping_code']); break; }
-    }
-  }
-
-  // Aggregate
+  // Compute aggregates from the rows. Underscore values are treated as
+  // non‑numeric so numOrNull/intOrNull will return null and contribute 0.
   $agg = [
-    'cartons'=>0,'total_qty'=>0,'cbm'=>0,'total_cbm'=>0,'gwkg'=>0,'total_gw'=>0,'total_amount'=>0
+    'cartons'      => 0,
+    'total_qty'    => 0,
+    'cbm'          => 0,
+    'total_cbm'    => 0,
+    'gwkg'         => 0,
+    'total_gw'     => 0,
+    'total_amount' => 0,
   ];
-  foreach ($rows as $r){
+  foreach ($rows as $r) {
     $agg['cartons']      += intOrNull($r['total_ctns']   ?? 0) ?: 0;
     $agg['total_qty']    += intOrNull($r['total_qty']    ?? 0) ?: 0;
     $agg['cbm']          += numOrNull($r['cbm']          ?? 0) ?: 0;
@@ -260,118 +401,210 @@ function process_single_shipment(
     $agg['total_amount'] += numOrNull($r['total_amount'] ?? 0) ?: 0;
   }
 
-  // Optional: copy user shipping_code to shipments.shipping_code
-  $shipmentUserCode = null;
-  if ($userId){
-    $tmp = $pdo->prepare('SELECT shipping_code FROM users WHERE user_id=?');
-    $tmp->execute([$userId]);
-    $shipmentUserCode = trim((string)($tmp->fetch()['shipping_code'] ?? '')) ?: null;
-  }
+  // Start a database transaction to ensure atomic overwrite/insert
+  $pdo->beginTransaction();
+  try {
+    // Lock the shipment row with this tracking number if it exists
+    $select = $pdo->prepare('SELECT * FROM shipments WHERE tracking_number = ? FOR UPDATE');
+    $select->execute([$sanitizedBase]);
+    $existingShipment = $select->fetch(PDO::FETCH_ASSOC);
 
-  // Customer-facing short code
-  $customerCode = generateCustomerTrackingCode($pdo, $userId);
+    if ($existingShipment) {
+      // Overwrite scenario: preserve shipment_id, customer_tracking_code,
+      // shipping_code, container_number, user_id
+      $shipmentId = (int)$existingShipment['shipment_id'];
+      $tracking   = $existingShipment['tracking_number'];
+      // Update other fields derived from file
+      $update = $pdo->prepare(
+        'UPDATE shipments SET
+          product_description = :product_description,
+          cbm            = :cbm,
+          cartons        = :cartons,
+          weight         = :weight,
+          gross_weight   = :gross_weight,
+          total_amount   = :total_amount,
+          status         = :status,
+          origin         = :origin,
+          destination    = :destination,
+          pickup_date    = :pickup_date,
+          delivery_date  = :delivery_date,
+          total_qty      = :total_qty,
+          total_cbm      = :total_cbm,
+          total_gw       = :total_gw,
+          updated_at     = NOW()
+        WHERE shipment_id = :shipment_id'
+      );
+      $update->execute([
+        ':product_description' => sprintf('Imported from %s (%d items)', $originalName, count($rows)),
+        ':cbm'            => ($agg['cbm'] > 0 ? $agg['cbm'] : $agg['total_cbm']),
+        ':cartons'        => $agg['cartons'],
+        ':weight'         => ($agg['gwkg'] > 0 ? $agg['gwkg'] : null),
+        ':gross_weight'   => ($agg['total_gw'] > 0 ? $agg['total_gw'] : null),
+        ':total_amount'   => $agg['total_amount'],
+        ':status'         => 'En Route',
+        ':origin'         => '',
+        ':destination'    => '',
+        ':pickup_date'    => null,
+        ':delivery_date'  => null,
+        ':total_qty'      => $agg['total_qty'],
+        ':total_cbm'      => $agg['total_cbm'],
+        ':total_gw'       => $agg['total_gw'],
+        ':shipment_id'    => $shipmentId,
+      ]);
 
-  // Insert shipment header
-  $insShipment = $pdo->prepare('
-    INSERT INTO shipments (
-      user_id, tracking_number, container_number, bl_number, shipping_code,
-      product_description, cbm, cartons, weight, gross_weight, total_amount,
-      status, origin, destination, pickup_date, delivery_date,
-      total_qty, total_cbm, total_gw, customer_tracking_code,
-      created_at, updated_at
-    ) VALUES (
-      :user_id, :tracking, :container_number, NULL, :shipping_code,
-      :product_description, :cbm, :cartons, :weight, :gross_weight, :total_amount,
-      :status, :origin, :destination, :pickup_date, :delivery_date,
-      :total_qty, :total_cbm, :total_gw, :customer_tracking_code,
-      NOW(), NOW()
-    )');
-  $insShipment->execute([
-    ':user_id'             => $userId,
-    ':tracking'            => $tracking,
-    ':container_number'    => ($containerNum !== '' ? $containerNum : null),
-    ':shipping_code'       => $shipmentUserCode,
-    ':product_description' => sprintf('Imported from %s (%d items)', $originalName, count($rows)),
-    ':cbm'                 => ($agg['cbm']>0?$agg['cbm']:$agg['total_cbm']),
-    ':cartons'             => $agg['cartons'],
-    ':weight'              => ($agg['gwkg']>0?$agg['gwkg']:null),
-    ':gross_weight'        => ($agg['total_gw']>0?$agg['total_gw']:null),
-    ':total_amount'        => $agg['total_amount'],
-    ':status'              => 'En Route',
-    ':origin'              => '',
-    ':destination'         => '',
-    ':pickup_date'         => null,
-    ':delivery_date'       => null,
-    ':total_qty'           => $agg['total_qty'],
-    ':total_cbm'           => $agg['total_cbm'],
-    ':total_gw'            => $agg['total_gw'],
-    ':customer_tracking_code' => $customerCode,
-  ]);
-  $shipmentId = (int)$pdo->lastInsertId();
+      // Remove existing line items for this shipment
+      $del = $pdo->prepare('DELETE FROM shipment_items WHERE shipment_id = ?');
+      $del->execute([$shipmentId]);
+    } else {
+      // Insert scenario: generate a unique tracking number if needed
+      // Use generateUniqueTracking() with the sanitized base as a seed. If
+      // generateUniqueTracking() returns the base (because it does not yet
+      // exist) we will insert exactly that; otherwise it will append a
+      // suffix. Importantly, we do not assign or create customers here.
+      $tracking = generateUniqueTracking($pdo, $sanitizedBase);
+      // For new shipments no user/customer assignment is made
+      $shipmentUserId  = null;
+      $shipmentShipCd  = null;
+      // New customer tracking code (optional). We choose to leave it null to
+      // avoid customer linkage. If desired, it could be generated via
+      // generateCustomerTrackingCode($pdo, null).
+      $customerCode    = null;
+      $ins = $pdo->prepare(
+        'INSERT INTO shipments (
+          user_id, tracking_number, container_number, bl_number, shipping_code,
+          product_description, cbm, cartons, weight, gross_weight, total_amount,
+          status, origin, destination, pickup_date, delivery_date,
+          total_qty, total_cbm, total_gw, customer_tracking_code,
+          created_at, updated_at
+        ) VALUES (
+          :user_id, :tracking_number, :container_number, NULL, :shipping_code,
+          :product_description, :cbm, :cartons, :weight, :gross_weight, :total_amount,
+          :status, :origin, :destination, :pickup_date, :delivery_date,
+          :total_qty, :total_cbm, :total_gw, :customer_tracking_code,
+          NOW(), NOW()
+        )'
+      );
+      $ins->execute([
+        ':user_id'             => $shipmentUserId,
+        ':tracking_number'     => $tracking,
+        ':container_number'    => ($containerNum !== '' ? $containerNum : null),
+        ':shipping_code'       => $shipmentShipCd,
+        ':product_description' => sprintf('Imported from %s (%d items)', $originalName, count($rows)),
+        ':cbm'                 => ($agg['cbm'] > 0 ? $agg['cbm'] : $agg['total_cbm']),
+        ':cartons'             => $agg['cartons'],
+        ':weight'              => ($agg['gwkg'] > 0 ? $agg['gwkg'] : null),
+        ':gross_weight'        => ($agg['total_gw'] > 0 ? $agg['total_gw'] : null),
+        ':total_amount'        => $agg['total_amount'],
+        ':status'              => 'En Route',
+        ':origin'              => '',
+        ':destination'         => '',
+        ':pickup_date'         => null,
+        ':delivery_date'       => null,
+        ':total_qty'           => $agg['total_qty'],
+        ':total_cbm'           => $agg['total_cbm'],
+        ':total_gw'            => $agg['total_gw'],
+        ':customer_tracking_code' => $customerCode,
+      ]);
+      $shipmentId = (int)$pdo->lastInsertId();
+    }
 
-  // Insert line items
-  $insItem = $pdo->prepare('
-    INSERT INTO shipment_items (
-      shipment_id, item_id, item_no, description, cartons, qty_per_ctn, total_qty,
-      unit_price, total_amount, cbm, total_cbm, gwkg, total_gw
-    ) VALUES (
-      :shipment_id, NULL, :item_no, :description, :cartons, :qty_per_ctn, :total_qty,
-      :unit_price, :total_amount, :cbm, :total_cbm, :gwkg, :total_gw
-    )');
-  foreach($rows as $r){
-    $insItem->execute([
-      ':shipment_id'  => $shipmentId,
-      ':item_no'      => trim((string)($r['item_no'] ?? '')),
-      ':description'  => trim((string)($r['description'] ?? '')),
-      ':cartons'      => intOrNull($r['total_ctns']   ?? null),
-      ':qty_per_ctn'  => intOrNull($r['qty_per_ctn'] ?? null),
-      ':total_qty'    => intOrNull($r['total_qty']   ?? null),
-      ':unit_price'   => numOrNull($r['unit_price']  ?? null),
-      ':total_amount' => numOrNull($r['total_amount']?? null),
-      ':cbm'          => numOrNull($r['cbm']         ?? null),
-      ':total_cbm'    => numOrNull($r['total_cbm']   ?? null),
-      ':gwkg'         => numOrNull($r['gwkg']        ?? null),
-      ':total_gw'     => numOrNull($r['total_gw']    ?? null),
-    ]);
-  }
+    // Prepare insert statement for items. We will preserve underscores in
+    // targeted numeric columns by passing the raw string value instead of
+    // converting through numOrNull/intOrNull when the value is exactly "_".
+    $itemStmt = $pdo->prepare(
+      'INSERT INTO shipment_items (
+        shipment_id, item_id, item_no, description, cartons, qty_per_ctn, total_qty,
+        unit_price, total_amount, cbm, total_cbm, gwkg, total_gw
+      ) VALUES (
+        :shipment_id, NULL, :item_no, :description, :cartons, :qty_per_ctn, :total_qty,
+        :unit_price, :total_amount, :cbm, :total_cbm, :gwkg, :total_gw
+      )'
+    );
+    $itemsInserted = 0;
+    foreach ($rows as $r) {
+      // Extract values, preserving underscores for targeted numeric fields
+      $val_cartons      = ($r['total_ctns']   ?? '') === '_' ? '_' : intOrNull($r['total_ctns']   ?? null);
+      $val_qty_per_ctn  = ($r['qty_per_ctn'] ?? '') === '_' ? '_' : intOrNull($r['qty_per_ctn'] ?? null);
+      $val_total_qty    = ($r['total_qty']   ?? '') === '_' ? '_' : intOrNull($r['total_qty']   ?? null);
+      $val_unit_price   = ($r['unit_price']  ?? '') === '_' ? '_' : numOrNull($r['unit_price']  ?? null);
+      $val_total_amount = ($r['total_amount']?? '') === '_' ? '_' : numOrNull($r['total_amount']?? null);
+      $val_cbm          = ($r['cbm']         ?? '') === '_' ? '_' : numOrNull($r['cbm']         ?? null);
+      $val_total_cbm    = ($r['total_cbm']   ?? '') === '_' ? '_' : numOrNull($r['total_cbm']   ?? null);
+      $val_gwkg         = ($r['gwkg']        ?? '') === '_' ? '_' : numOrNull($r['gwkg']        ?? null);
+      $val_total_gw     = ($r['total_gw']    ?? '') === '_' ? '_' : numOrNull($r['total_gw']    ?? null);
+      $itemStmt->execute([
+        ':shipment_id'  => $shipmentId,
+        ':item_no'      => trim((string)($r['item_no'] ?? '')),
+        ':description'  => trim((string)($r['description'] ?? '')),
+        ':cartons'      => $val_cartons,
+        ':qty_per_ctn'  => $val_qty_per_ctn,
+        ':total_qty'    => $val_total_qty,
+        ':unit_price'   => $val_unit_price,
+        ':total_amount' => $val_total_amount,
+        ':cbm'          => $val_cbm,
+        ':total_cbm'    => $val_total_cbm,
+        ':gwkg'         => $val_gwkg,
+        ':total_gw'     => $val_total_gw,
+      ]);
+      $itemsInserted++;
+    }
 
-  // Optional PDF attach
-  if ($pdfFile && !empty($pdfFile['tmp_name'])) {
-    $tmpPath = $pdfFile['tmp_name'];
-    $size    = (int)($pdfFile['size'] ?? 0);
-    if ($size <= 20 * 1024 * 1024) {
-      $finfo = new finfo(FILEINFO_MIME_TYPE);
-      $mime  = $finfo->file($tmpPath);
-      if ($mime === 'application/pdf') {
-        $storageRoot = dirname(__DIR__, 2) . '/storage/shipments';
-        $targetDir   = $storageRoot . '/' . (int)$shipmentId;
-        if (!is_dir($targetDir)) @mkdir($targetDir, 0775, true);
-        if (is_dir($targetDir)) {
-          $target = $targetDir . '/report.pdf';
-          if (@move_uploaded_file($tmpPath, $target)) { @chmod($target, 0644); }
+    // Attach PDF if provided (optional). We do this after line items are in place.
+    if ($pdfFile && !empty($pdfFile['tmp_name'])) {
+      $tmpPath = $pdfFile['tmp_name'];
+      $size    = (int)($pdfFile['size'] ?? 0);
+      if ($size <= 20 * 1024 * 1024) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime  = $finfo->file($tmpPath);
+        if ($mime === 'application/pdf') {
+          $storageRoot = dirname(__DIR__, 2) . '/storage/shipments';
+          $targetDir   = $storageRoot . '/' . (int)$shipmentId;
+          if (!is_dir($targetDir)) @mkdir($targetDir, 0775, true);
+          if (is_dir($targetDir)) {
+            $target = $targetDir . '/report.pdf';
+            if (@move_uploaded_file($tmpPath, $target)) { @chmod($target, 0644); }
+          }
         }
       }
     }
+
+    // Log import action
+    try {
+      $log = $pdo->prepare('INSERT INTO logs (action_type, actor_id, related_shipment_id, details, timestamp) VALUES (?,?,?,?,NOW())');
+      $log->execute([
+        'shipments_import',
+        (int)($_SESSION['admin_id'] ?? 0) * -1,
+        $shipmentId,
+        json_encode([
+          'file'       => $originalName,
+          'rows'       => count($rows),
+          'tracking'   => $tracking,
+          'overwrite'  => (bool)$existingShipment,
+          'items'      => $itemsInserted,
+        ], JSON_UNESCAPED_UNICODE),
+      ]);
+    } catch (Throwable $e) {
+      // Non‑fatal logging error; ignore
+    }
+
+    // Commit transaction
+    $pdo->commit();
+
+    // Prepare return payload
+    return [
+      'ok'             => true,
+      'tracking_number'=> $tracking,
+      'shipment_id'    => $shipmentId,
+      'items_replaced' => $itemsInserted,
+      'message'        => $existingShipment
+        ? 'Overwrote shipment by tracking_number; preserved key identifiers; merged cells normalized'
+        : 'Created new shipment from import; merged cells normalized',
+    ];
+  } catch (Throwable $e) {
+    // Rollback on any error
+    $pdo->rollBack();
+    throw $e;
   }
-
-  // Log import
-  try{
-    $log=$pdo->prepare('INSERT INTO logs (action_type, actor_id, related_shipment_id, details, timestamp)
-                        VALUES (?,?,?,?,NOW())');
-    $log->execute([
-      'shipments_import',
-      (int)($_SESSION['admin_id']??0)*-1,
-      $shipmentId,
-      json_encode(['file'=>$originalName,'rows'=>count($rows),'tracking'=>$tracking,'customer_tracking_code'=>$customerCode], JSON_UNESCAPED_UNICODE)
-    ]);
-  }catch(Throwable $e){ /* non-fatal */ }
-
-  return [
-    'shipment_id' => $shipmentId,
-    'tracking_number' => $tracking,
-    'customer_tracking_code' => $customerCode,
-    'items' => count($rows),
-  ];
 }
 
 /** normalize nested $_FILES for shipments[IDX][excel|pdf] along with $_POST[shipments][IDX][user_id] */
@@ -442,7 +675,18 @@ if (isset($_POST['submit_batch'])) {
           $container,
           $hasHeader
         );
-        $results[] = ['ok'=>true, 'msg'=>"Row ".($idx+1).": created shipment {$res['shipment_id']} (tracking {$res['tracking_number']}, customer code {$res['customer_tracking_code']})"];
+        // Compose a human‑readable message. Distinguish between newly created
+        // shipments and overwritten shipments based on whether items were
+        // replaced from an existing record.
+        if (!empty($res['ok'])) {
+          $action = $res['message'] ?? '';
+          $results[] = [
+            'ok' => true,
+            'msg' => "Row " . ($idx + 1) . ": shipment {$res['shipment_id']} (tracking {$res['tracking_number']}) processed; " . ($res['items_replaced'] ?? 0) . " item(s) imported",
+          ];
+        } else {
+          $results[] = ['ok' => false, 'msg' => "Row " . ($idx + 1) . ": Unexpected response"];
+        }
       } catch(Throwable $e){
         $results[] = ['ok'=>false, 'msg'=>"Row ".($idx+1).": ".$e->getMessage()];
       }
