@@ -287,25 +287,26 @@ $warehouseDisplayTime  = $warehouseTime; // keep format consistent with your pag
 </head>
 <body>
 <!-- Header -->
-<header id="header" class="alt">
-  <h1><a href="index.php">Salameh Cargo</a></h1>
-  <nav><a href="#menu">Menu</a></nav>
-</header>
+  <header id="header" class="alt">
+      <h1><a href="index.html"><img src="././assets/images/Salameh-Cargo-Logo-ai-7.webp" alt="" style="width:6%"></a></h1>
+      <nav><a id="menu1" href="#menu">Menu</a></nav>
+    </header>
 
-<nav id="menu">
-  <div class="inner">
-    <h2 id="menuh2">Menu</h2>
-    <ul class="links">
-      <li><a href="index.php">Home</a></li>
-      <li><a href="track.php">Track your item</a></li>
-      <li><a href="dashboard.php">Dashboard</a></li>
-      <li><a href="shipping_calculator.php">shipping calculator</a></li>
-      <li><a href="about.php">About us</a></li>
-      <li><a href="login.php">Log in</a></li>
-    </ul>
-    <a href="#" class="close">Close</a>
-  </div>
-</nav>
+    <!-- Menu (exact structure copied from index.php) -->
+    <nav id="menu">
+      <div class="inner">
+        <h2 id="menuu">Menu</h2>
+        <ul class="links">
+          <li><a href="index.php">Home</a></li>
+          <li><a href="track.php">Track Your Item</a></li>
+          <li><a href="dashboard.php">dashboard</a></li>
+          <li><a href="about.php">about us</a></li>
+          <li><a href="shipping_calculator.php">shipping calculator</a></li>
+          <li><a href="login.php">Log In</a></li>
+        </ul>
+        <a href="#" class="close">Close</a>
+      </div>
+    </nav>
 
   <!-- Hero / Search -->
   <section class="hero">
@@ -571,9 +572,45 @@ $warehouseDisplayTime  = $warehouseTime; // keep format consistent with your pag
     <?php endif; ?>
   </main>
 
-  <footer class="public-footer">
-    <p>© <?= date('Y') ?> Salameh Cargo. All rights reserved.</p>
-  </footer>
+ 		<section id="footer" style="margin-top: 2rem;background-color: #393f4e;">
+			<div class="inner">
+				<h2 class="major" style="color: white !important;">Get in touch</h2>
+				<p style="color: white !important;">Salameh Cargo was established in 2004 in China, with a focus on providing complete logistics solutions.</p>
+				<form method="post" action="#">
+					<div class="fields">
+						<div class="field">
+							<label for="name">Name</label>
+							<input type="text" name="name" id="name" />
+						</div>
+						<div class="field">
+							<label for="email">Email</label>
+							<input type="email" name="email" id="email" />
+						</div>
+						<div class="field">
+							<label for="message">Message</label>
+							<textarea name="message" id="message" rows="4"></textarea>
+						</div>
+					</div>
+					<ul class="actions">
+						<li><input type="submit" value="Send Message" /></li>
+					</ul>
+				</form>
+				<ul class="contact">
+					<li class="icon solid fa-home">
+						China-Zhejiang-Yiwu <br>
+						+86-15925979212
+					</li>
+					<li class="icon solid fa-phone" > <a href="whatsapp://send?phone=96103638127">(961) 03-638-127</a></li>
+					<li class="icon solid fa-phone"> <a href="whatsapp://send?phone=96176988128">00961-76988128</a></li>
+					<li class="icon solid fa-phone"><a href="tel:00961-5 472568">00961-5 472568</a></li>
+					<li class="icon brands fa-facebook-f"><a href="https://facebook.com/salamehcargo">salamehcargo</a></li>
+					<li class="icon brands fa-instagram"><a href="https://instagram.com/salameh_cargo">salameh_cargo</a></li>
+				</ul>
+				<ul class="copyright">
+					<li>&copy;All rights reserved To Salameh Cargo.</li>
+				</ul>
+			</div>
+		</section>
 
   <!-- Page-scoped JS -->
   <script>

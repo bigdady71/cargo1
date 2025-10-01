@@ -930,3 +930,40 @@ h1, h2, h3, h4, h5, h6, p, blockquote, pre, code, ul, ol, dl, table, form {
   }
 
 }
+
+    #menu1 {
+        color: rgb(212, 212, 212) !important;
+
+    }
+
+    #menuu :hover {
+
+        color: white !important;
+    }
+
+    #menuu {
+        color: white !important;
+    }
+
+    .icon {
+        color: white !important;
+    }
+
+    a {
+        color: white !important;
+    }
+    #header {
+        -moz-transition: background-color 0.2s ease-in-out !important;
+        -webkit-transition: background-color 0.2s ease-in-out !important;
+        -ms-transition: background-color 0.2s ease-in-out !important;
+        transition: background-color 0.2s ease-in-out !important;
+        background-color: #3f4e85 !important;
+        height: 3.5em;
+        left: 0;
+        line-height: 3.5em;
+        padding: 0 1.25em;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 10000;
+    }
